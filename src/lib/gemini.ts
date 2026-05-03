@@ -1,7 +1,6 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 export async function processVirtualTryOn(modelBase64: string, clothingBase64: string, userPrompt: string) {
   try {
     const modelMatch = modelBase64.match(/^data:(image\/\w+);base64,/);
@@ -10,9 +9,10 @@ export async function processVirtualTryOn(modelBase64: string, clothingBase64: s
     const modelMime = modelMatch ? modelMatch[1] : 'image/png';
     const clothingMime = clothingMatch ? clothingMatch[1] : 'image/png';
 
-    const response = await ai.models.generateContent({
-    model: 'gemini-1.5-pro-latest',
-      contents: {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+
+const response = await model.generateContent({
+  contents: {
         parts: [
           {
             inlineData: {
@@ -63,9 +63,10 @@ export async function processRestorePhoto(photoBase64: string, userPrompt: strin
     const pathMatch = photoBase64.match(/^data:(image\/\w+);base64,/);
     const mime = pathMatch ? pathMatch[1] : 'image/png';
 
-    const response = await ai.models.generateContent({
-      model: model: 'gemini-1.5-pro-latest',
-      contents: {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+
+const response = await model.generateContent({
+  contents: {
         parts: [
           {
             inlineData: {
