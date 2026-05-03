@@ -9,7 +9,7 @@ export async function processVirtualTryOn(modelBase64: string, clothingBase64: s
     const modelMime = modelMatch ? modelMatch[1] : 'image/png';
     const clothingMime = clothingMatch ? clothingMatch[1] : 'image/png';
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
 const response = await model.generateContent({
   contents: {
@@ -63,7 +63,7 @@ export async function processRestorePhoto(photoBase64: string, userPrompt: strin
     const pathMatch = photoBase64.match(/^data:(image\/\w+);base64,/);
     const mime = pathMatch ? pathMatch[1] : 'image/png';
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
 const response = await model.generateContent({
   contents: {
