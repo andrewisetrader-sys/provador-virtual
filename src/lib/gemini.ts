@@ -11,7 +11,7 @@ export async function processVirtualTryOn(modelBase64: string, clothingBase64: s
     const clothingMime = clothingMatch ? clothingMatch[1] : 'image/png';
 
     const response = await ai.models.generateContent({
-     model: 'gemini-2.5-flash-image',
+    model: 'gemini-1.5-pro-latest',
       contents: {
         parts: [
           {
@@ -64,7 +64,7 @@ export async function processRestorePhoto(photoBase64: string, userPrompt: strin
     const mime = pathMatch ? pathMatch[1] : 'image/png';
 
     const response = await ai.models.generateContent({
-      model: model: 'gemini-2.5-flash-image',
+      model: model: 'gemini-1.5-pro-latest',
       contents: {
         parts: [
           {
