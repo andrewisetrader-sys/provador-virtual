@@ -1,106 +1,59 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-export async function processVirtualTryOn(modelBase64: string, clothingBase64: string, userPrompt: string) {
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+export async function processVirtualTryOn(
+  modelBase64: string,
+  clothingBase64: string,
+  userPrompt: string
+) {
   try {
-    const modelMatch = modelBase64.match(/^data:(image\/\w+);base64,/);
-    const clothingMatch = clothingBase64.match(/^data:(image\/\w+);base64,/);
-    
-    const modelMime = modelMatch ? modelMatch[1] : 'image/png';
-    const clothingMime = clothingMatch ? clothingMatch[1] : 'image/png';
+    const prompt = `
+    TASK: Virtual Try-On.
+    Take the person from the first image and dress them with the outfit from the second image.
+    Keep face, identity and body realistic.
+    Style: professional fashion photography.
+    ${userPrompt || ""}
+    `;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.0-pro-vision" });
-
-const response = await model.generateContent({
-  contents: {
-        parts: [
-          {
-            inlineData: {
-              data: modelBase64.split(',')[1],
-              mimeType: modelMime,
-            },
-          },
-          {
-            inlineData: {
-              data: clothingBase64.split(',')[1],
-              mimeType: clothingMime,
-            },
-          },
-          {
-            text: `TASK: Virtual Try-On.
-            Instruction: Take the person from the first image and dress them in the outfit shown in the second image. 
-            Maintain the person's facial features and skin tone. Adjust the clothing to fit their body pose naturally.
-            The final output should be a high-quality single image of the model wearing the outfit.
-            Style: professional fashion photography, realistic lighting.
-            User hints: ${userPrompt || 'Realistic fit, natural studio light'}`,
-          },
-        ],
-      },
+    const response = await openai.images.generate({
+      model: "gpt-image-1",
+      prompt,
+      size: "1024x1024",
     });
 
-    if (!response.candidates?.[0]?.content?.parts) {
-      throw new Error('O modelo não retornou uma resposta válida.');
-    }
+    return `data:image/png;base64,${response.data[0].b64_json}`;
 
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData) {
-        return `data:image/png;base64,${part.inlineData.data}`;
-      }
-    }
-    
-    throw new Error('O modelo processou o pedido mas não gerou a imagem final. Verifique se as imagens são claras (pessoas e roupas bem visíveis) e tente novamente.');
   } catch (error: any) {
-    if (error.message?.includes('Permission denied')) {
-      throw new Error('Permissão negada pela API Gemini. Certifique-se de que o modelo gemini-2.5-flash-image está disponível na sua conta.');
-    }
-    console.error('Erro no Provador:', error);
+    console.error("Erro no Provador:", error);
     throw error;
   }
 }
 
-export async function processRestorePhoto(photoBase64: string, userPrompt: string) {
+export async function processRestorePhoto(
+  photoBase64: string,
+  userPrompt: string
+) {
   try {
-    const pathMatch = photoBase64.match(/^data:(image\/\w+);base64,/);
-    const mime = pathMatch ? pathMatch[1] : 'image/png';
+    const prompt = `
+    TASK: Photo Restoration.
+    Restore this image with high quality.
+    Remove noise, improve sharpness and lighting.
+    ${userPrompt || ""}
+    `;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.0-pro-vision" });
-
-const response = await model.generateContent({
-  contents: {
-        parts: [
-          {
-            inlineData: {
-              data: photoBase64.split(',')[1],
-              mimeType: mime,
-            },
-          },
-          {
-            text: `TASK: Photo Restoration and Colorization.
-            Instruction: Restore this old or damaged photograph. Perform high-quality colorization with natural skin tones. 
-            Remove scratches, stains, and noise. Increase sharpness and contrast while maintaining original identity.
-            The final result should be a crisp, modern-looking photo.
-            User hints: ${userPrompt || 'Professional restoration, clear faces'}`,
-          },
-        ],
-      },
+    const response = await openai.images.generate({
+      model: "gpt-image-1",
+      prompt,
+      size: "1024x1024",
     });
 
-    if (!response.candidates?.[0]?.content?.parts) {
-      throw new Error('O modelo não retornou uma resposta válida.');
-    }
+    return `data:image/png;base64,${response.data[0].b64_json}`;
 
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData) {
-        return `data:image/png;base64,${part.inlineData.data}`;
-      }
-    }
-    
-    throw new Error('O modelo processou o pedido mas não gerou a imagem final. Tente um prompt diferente.');
   } catch (error: any) {
-    if (error.message?.includes('Permission denied')) {
-      throw new Error('Permissão negada pela API Gemini. Certifique-se de que o modelo gemini-2.5-flash-image está disponível na sua conta.');
-    }
-    console.error('Erro na Restauração:', error);
+    console.error("Erro na Restauração:", error);
     throw error;
   }
 }
